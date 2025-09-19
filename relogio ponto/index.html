@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relógio Ponto Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        .time-card { transition: all 0.3s ease; }
+        .time-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59,130,246,0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <header class="text-center mb-12" data-aos="fade-down">
+                <h1 class="text-4xl font-bold text-blue-600 mb-2">Relógio Ponto Digital</h1>
+                <p class="text-gray-600">Registre seus horários de trabalho de forma simples e eficiente</p>
+            </header>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8" data-aos="fade-up">
+                <div class="p-6 md:p-8">
+                    <!-- Current Time Display -->
+                    <div class="flex flex-col items-center justify-center mb-8">
+                        <div class="text-5xl font-bold text-gray-800 mb-2" id="current-time">00:00:00</div>
+                        <div class="text-xl text-gray-600" id="current-date">Segunda-feira, 01 de Janeiro de 2023</div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-8">
+                        <button id="entrada-btn" class="time-card bg-green-500 hover:bg-green-600 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center transition-all">
+                            <i data-feather="log-in" class="w-8 h-8 mb-2"></i><span>Entrada</span>
+                        </button>
+                        <button id="intervalo-btn" class="time-card bg-yellow-500 hover:bg-yellow-600 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center transition-all">
+                            <i data-feather="coffee" class="w-8 h-8 mb-2"></i><span>Intervalo</span>
+                        </button>
+                        <button id="retorno-btn" class="time-card bg-blue-500 hover:bg-blue-600 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center transition-all">
+                            <i data-feather="refresh-cw" class="w-8 h-8 mb-2"></i><span>Retorno</span>
+                        </button>
+                        <button id="saida-btn" class="time-card bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center transition-all">
+                            <i data-feather="log-out" class="w-8 h-8 mb-2"></i><span>Saída</span>
+                        </button>
+                        <button id="export-btn" class="time-card bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center transition-all">
+                            <i data-feather="download" class="w-8 h-8 mb-2"></i><span>Exportar CSV</span>
+                        </button>
+                        <label for="import-file" class="time-card bg-gray-600 hover:bg-gray-700 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all">
+                            <i data-feather="upload" class="w-8 h-8 mb-2"></i><span>Importar CSV</span>
+                        </label>
+                        <button id="clear-btn" class="time-card bg-red-700 hover:bg-red-800 text-white py-4 px-6 rounded-lg flex flex-col items-center justify-center transition-all">
+                            <i data-feather="trash-2" class="w-8 h-8 mb-2"></i><span>Apagar</span>
+                        </button>
+                        <input type="file" id="import-file" accept=".csv" class="hidden" />
+                    </div>
+
+                    <!-- Notification Area -->
+                    <div id="notification" class="hidden fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50"></div>
+                </div>
+            </div>
+
+            <!-- Records Table -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Registros do Dia</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horário</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Localização</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhum registro encontrado</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Horas Extras -->
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Horas Extras do Dia</h3>
+                        <div id="extra-hours" class="text-lg font-bold text-gray-700">0h 0m</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const isAdmin = true;
+AOS.init(); feather.replace();
+
+// Relógio em tempo real
+function updateTime(){
+    const now = new Date();
+    document.getElementById("current-time").textContent =
+        now.toLocaleTimeString("pt-BR",{hour12:false});
+    document.getElementById("current-date").textContent =
+        now.toLocaleDateString("pt-BR",{weekday:"long", day:"numeric", month:"long", year:"numeric"});
+}
+setInterval(updateTime,1000); updateTime();
+
+// Persistência
+let records = JSON.parse(localStorage.getItem("registrosPonto")) || [];
+let currentLocation="São Paulo, SP";
+
+// Geolocalização
+function fetchLocation(){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(async pos=>{
+            try{
+                const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                const d=await r.json();
+                const city=d.address.city||d.address.town||d.address.village||"";
+                const state=d.address.state||"";
+                if(city&&state) currentLocation=`${city}, ${state}`;
+            }catch(e){console.error("Erro localização",e);}
+        });
+    }
+}
+fetchLocation();
+
+// Jornada padrão (9h40m = 580m)
+const jornadaPadraoMin=580;
+function timeStringToMinutes(str){const[h,m]=str.split(":").map(Number);return h*60+m;}
+function calcularHorasExtras(){
+    const entrada=records.find(r=>r.type==="Entrada");
+    const saida=[...records].reverse().find(r=>r.type==="Saída");
+    if(!entrada||!saida) return 0;
+    const entradaMin=timeStringToMinutes(entrada.time);
+    const saidaMin=timeStringToMinutes(saida.time);
+    let totalInt=0;
+    const intervalos=records.filter(r=>r.type==="Intervalo");
+    const retornos=records.filter(r=>r.type==="Retorno");
+    for(let i=0;i<intervalos.length;i++){
+        const iMin=timeStringToMinutes(intervalos[i].time);
+        if(retornos[i]) totalInt+=timeStringToMinutes(retornos[i].time)-iMin;
+        else totalInt+=saidaMin-iMin;
+    }
+    return (saidaMin-entradaMin-totalInt)-jornadaPadraoMin;
+}
+function formatMinutes(min){const h=Math.floor(Math.abs(min)/60),m=Math.abs(min)%60;return `${min>=0?"+":"-"} ${h}h ${m}m`;}
+
+// Notificação
+function showNotification(msg,type="success"){
+    const el=document.getElementById("notification");
+    el.textContent=msg;
+    el.className="fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50";
+    if(type==="success") el.classList.add("bg-green-500","text-white");
+    if(type==="error") el.classList.add("bg-red-500","text-white");
+    if(type==="warn") el.classList.add("bg-yellow-500","text-white");
+    el.classList.remove("hidden");
+    setTimeout(()=>el.classList.add("hidden"),3000);
+}
+
+// Atualizar tabela
+function updateRecordsTable(){
+    const body=document.getElementById("records-body");
+    if(records.length===0){
+        body.innerHTML=`<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhum registro encontrado</td></tr>`;
+        return;
+    }
+    body.innerHTML="";
+    records.forEach(r=>{
+        const row=document.createElement("tr");
+        let color="",icon="";
+        if(r.type==="Entrada"){color="text-green-600";icon="log-in";}
+        if(r.type==="Intervalo"){color="text-yellow-600";icon="coffee";}
+        if(r.type==="Retorno"){color="text-blue-600";icon="refresh-cw";}
+        if(r.type==="Saída"){color="text-red-600";icon="log-out";}
+        row.innerHTML=`<td class="px-6 py-4"><div class="flex items-center"><i data-feather="${icon}" class="w-4 h-4 mr-2 ${color}"></i><span class="${color} font-medium">${r.type}</span></div></td><td class="px-6 py-4 text-gray-500">${r.time}</td><td class="px-6 py-4 text-gray-500">${r.location}</td>`;
+        body.appendChild(row);
+    });
+    feather.replace();
+}
+function updateExtraHoursDisplay(){
+    const min=calcularHorasExtras();
+    const div=document.getElementById("extra-hours");
+    div.textContent=formatMinutes(min);
+    div.className="text-lg font-bold "+(min>=0?"text-green-600":"text-red-600");
+}
+function saveRecords(){localStorage.setItem("registrosPonto",JSON.stringify(records));}
+
+// Adicionar registro
+function addRecord(type){
+    const now=new Date();
+    const h=String(now.getHours()).padStart(2,"0");
+    const m=String(now.getMinutes()).padStart(2,"0");
+    records.push({type,time:`${h}:${m}`,location:currentLocation});
+    saveRecords(); updateRecordsTable(); updateExtraHoursDisplay(); showNotification("Registro salvo!");
+}
+
+// Exportar CSV
+function exportToCSV(){
+    if(records.length===0) return showNotification("Nenhum registro para exportar.","warn");
+    const csv=["Tipo,Horário,Localização",...records.map(r=>`"${r.type}","${r.time}","${r.location}"`)].join("\n");
+    const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url;a.download="registros.csv";a.click();URL.revokeObjectURL(url);
+}
+
+// Importar CSV
+function importFromCSV(file){
+    const reader=new FileReader();
+    reader.onload=e=>{
+        const lines=e.target.result.trim().split("\n").slice(1);
+        const newRecords=[];
+        lines.forEach(l=>{
+            const [type,time,location]=l.replace(/"/g,"").split(",");
+            if(["Entrada","Intervalo","Retorno","Saída"].includes(type)) newRecords.push({type,time,location});
+        });
+        if(newRecords.length===0) return showNotification("Arquivo CSV inválido","error");
+        records=newRecords; saveRecords(); updateRecordsTable(); updateExtraHoursDisplay(); showNotification("Importado com sucesso!");
+    };
+    reader.readAsText(file);
+}
+
+// Limpar registros
+function clearRecords(){
+    if(confirm("Apagar todos os registros?")){
+        records=[]; saveRecords(); updateRecordsTable(); updateExtraHoursDisplay(); showNotification("Registros apagados!","warn");
+    }
+}
+
+// Eventos
+document.getElementById("entrada-btn").onclick=()=>addRecord("Entrada");
+document.getElementById("intervalo-btn").onclick=()=>addRecord("Intervalo");
+document.getElementById("retorno-btn").onclick=()=>addRecord("Retorno");
+document.getElementById("saida-btn").onclick=()=>addRecord("Saída");
+document.getElementById("export-btn").onclick=exportToCSV;
+document.getElementById("import-file").onchange=e=>importFromCSV(e.target.files[0]);
+document.getElementById("clear-btn").onclick=clearRecords;
+
+// Inicializar exibição
+updateRecordsTable(); updateExtraHoursDisplay();
+</script>
+</body>
+</html>
